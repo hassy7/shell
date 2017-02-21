@@ -5,10 +5,11 @@
 #define MAXCMDLEN 256
 #define MAXWORDNUM 80
 
+
 void split_cmd(char* cmd, int* ac, char* av[]);
 void print_arg(char* arg);
 void print_args(int ac, char** av);
-void split_proc(int* ac, char* av[], int *Pac, char* Pav[]);
+void split_proc(int* ac, char* av[], int *Pac, char* Pav[], int* count);
 int countPipe(int ac, char* av[]);
 
 
@@ -20,25 +21,36 @@ int main(void)
 	char *Pav[MAXWORDNUM];
 	int Pac;
 
-	while(1) {
+	int i = 0;
+	int count = 0;
+
+	while (1) {
 		char cmd[MAXCMDLEN] = {0};
 
 		printf("mysh $: ");
-		if(fgets(cmd, MAXCMDLEN, stdin) == NULL) {
+		if (fgets(cmd, MAXCMDLEN, stdin) == NULL) {
 			fprintf(stderr, "input error\n");
 		}
 
 		split_cmd(cmd, &ac, av);
-
-		print_args(ac, av);
+		printf("Total Process = %i\n", countPipe(ac, av) + 1);
+		while (count < (countPipe(ac, av) + 1)) {
+			split_proc(&ac, av, &Pac, Pav, &count);
+			printf("Proc %i\nPac = %i\n", count + 1, Pac);
+			while (i < Pac) {
+				printf("Pav[%i] = %s\n", i, av[i]);
+				i++;
+			}
+			printf("\n");
+			i = 0;
+			count++;
+		}
 	}
 }
 
 void split_cmd(char* cmd, int* ac, char* av[]) {
 	int i = 0;
 	*ac = 0;
-
-	//もしパイプがあったら
 	while (1) {
 		if (cmd[i] == '\0') break;
 		if (cmd[i] == ' ' || cmd[i] == '\t' || cmd[i] == '\n') {
@@ -63,25 +75,23 @@ void print_args(int ac, char** av) {
 	}
 }
 
-void split_proc(int* ac, char* av[], int *Pac, char* Pav[]) {
+void split_proc(int* ac, char* av[], int *Pac, char* Pav[], int* count) {
 	int i = 0;
 	int j = 0;
-	//プロセスの数
-	Pac = countPipe(ac, av) + 1;
-	//プロセス数の表示
-	printf("Total Process = %i", Pav);
-	//Pavを求めて表示
-	while (i < Pac) {
-		//何個目のプロセスなのか
-		printf("Proc %i", i);
-			while (1) {
-				print
-			}
-		if (*av[i] == '|') {
-		
+	int k = 0;//Pavに格納
+	while (i < *count) {
+		while (*av[j] != '|') {
+			j++;
 		}
+		j++;
+		i++;
 	}
-	//各プロセスごとの情報を書く
+	while (*av[j] != '|') { 
+		*Pav[k] = *av[j];
+		k++;
+		j++;
+	}
+	*Pac = k;
 }
 
 int countPipe(int ac, char* av[]) {
@@ -94,4 +104,3 @@ int countPipe(int ac, char* av[]) {
 	}
 	return count;
 }
-
