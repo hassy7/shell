@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
 
 #define MAXCMDLEN 256
 #define MAXWORDNUM 80
@@ -12,6 +13,10 @@
 void split_cmd(char* cmd, int* ac, char* av[]);
 void split_proc(int* ac, char* av[], int *Pac, char* Pav[], int* count);
 int countPipe(int ac, char* av[]);
+//int countRedi(int Pac, char* Pav[]); 
+//int returnRedi(int Pac, char* Pav[], int rednm);
+int redin(int Pac, char* Pav[]);
+int redout(int Pac, char* Pav[]);
 
 
 int main(void)
@@ -24,10 +29,16 @@ int main(void)
 
 	int count;//
 	int pronum;//process number
-	
+
 	//コマンドの実行のための引数
 	int pid;//process id
 	int status;//waiting time
+
+	//use redirect
+	int rednum;
+	int redcount;
+	int redor;
+	int fd;
 
 	while (1) {
 		char cmd[MAXCMDLEN] = {0};
@@ -62,6 +73,18 @@ int main(void)
 					exit(-1);
 				} else if (pid == 0) {
 					//子プロセスで別プログラムを実行
+					//redirect
+					if (redout(Pac, Pav) > 0) {
+						printf("redout = %i", redout(Pac, Pav));
+						Pav[redout(Pac, Pav) - 1] = NULL;
+						fd = open(Pav[redout(Pac, Pav)], O_WRONLY|O_CREAT|O_TRUNC, 0644);
+						close(1);
+						dup(fd);
+						close(fd);
+					}
+					if (redin(Pac, Pav) > 0) {
+					
+					}
 					execvp(Pav[0], Pav);
 					exit(-1);
 				} else {
@@ -89,7 +112,7 @@ void split_cmd(char* cmd, int* ac, char* av[]) {
 		}
 		i++;
 	}
-	
+
 }
 
 void split_proc(int* ac, char* av[], int *Pac, char* Pav[], int* count) {
@@ -114,7 +137,7 @@ void split_proc(int* ac, char* av[], int *Pac, char* Pav[], int* count) {
 			break;
 		}
 	}
-	Pav[k] = NULL;
+	Pav[k] = NULL;// insert NULL into the last of commnd
 }
 
 int countPipe(int ac, char* av[]) {
@@ -124,6 +147,49 @@ int countPipe(int ac, char* av[]) {
 	while (i < ac) {
 		if (*av[i] == '|') count++;
 		i++;
+	}
+	return count;
+}
+
+/*int countRedi(int Pac, char* Pav[]) {
+  int i = 0;
+  int count = 0;
+  for (i = 0; i < Pac; i++) {
+  if ((strcmp(Pav[i], "<") == 0) || (strcmp(Pav[i], ">") == 0)) count++;
+  }
+  return count;
+  }
+
+  int returnRedi(int Pac, char* Pav[], int redcount) {
+  int i = 0;
+  int j = 0;
+  for (i = 0; i < redcount + 1; i++){
+  for (; ((strcmp(Pav[j], "<") != 0) || (strcmp(Pav[j], ">") != 0)); j++);
+  }
+  return j;
+
+  }*/
+
+int redin(int Pac, char* Pav[]) {
+	int i;
+	int inputfile = 0;
+	for (i = 0; i < Pac; i++) {
+		if (strcmp(Pav[i], "<") == 0) {
+			inputfile = i + 1;
+			break;
+		}
+	}
+	return inputfile;
+}
+
+int redout(int Pac, char* Pav[]) {
+	int i;
+	int count = 0;
+	for (i = 0; i < Pac; i++) {
+		if (strcmp(Pav[i], ">") == 0) {
+			count = i + 1;
+			break;
+		}
 	}
 	return count;
 }
