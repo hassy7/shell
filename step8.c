@@ -35,9 +35,9 @@ int main(void)
 	int status;//waiting time
 
 	//use redirect
-	int rednum;
-	int redcount;
-	int redor;
+	int redo;
+	int rei;
+	int i;
 	int fd;
 
 	while (1) {
@@ -72,18 +72,20 @@ int main(void)
 					perror("fork");
 					exit(-1);
 				} else if (pid == 0) {
-					//子プロセスで別プログラムを実行
-					//redirect
-					if (redout(Pac, Pav) > 0) {
-						printf("redout = %i\n", redout(Pac, Pav));
-						Pav[redout(Pac, Pav) - 1] = NULL;
-						fd = open(Pav[redout(Pac, Pav)], O_WRONLY|O_CREAT|O_TRUNC, 0644);
-						close(1);
-						dup(fd);
-						close(fd);
-					}
-					if (redin(Pac, Pav) > 0) {
-					
+					for (i = 0; i < Pac; i++) {
+						if (strcmp(Pav[i], ">") == 0) {
+							Pav[i] = NULL;
+							fd = open(Pav[i + 1], O_WRONLY|O_CREAT, 0644);
+							close(1);
+							dup(fd);
+							close(fd);
+						} else if (strcmp(Pav[i], "<") == 0) {
+							Pav[i] = NULL;
+							fd = open(Pav[i + 1], O_RDONLY|O_CREAT, 0644);
+							close(0);
+							dup(fd);
+							close(fd);
+						}
 					}
 					execvp(Pav[0], Pav);
 					exit(-1);
@@ -151,31 +153,12 @@ int countPipe(int ac, char* av[]) {
 	return count;
 }
 
-/*int countRedi(int Pac, char* Pav[]) {
-  int i = 0;
-  int count = 0;
-  for (i = 0; i < Pac; i++) {
-  if ((strcmp(Pav[i], "<") == 0) || (strcmp(Pav[i], ">") == 0)) count++;
-  }
-  return count;
-  }
-
-  int returnRedi(int Pac, char* Pav[], int redcount) {
-  int i = 0;
-  int j = 0;
-  for (i = 0; i < redcount + 1; i++){
-  for (; ((strcmp(Pav[j], "<") != 0) || (strcmp(Pav[j], ">") != 0)); j++);
-  }
-  return j;
-
-  }*/
-
 int redin(int Pac, char* Pav[]) {
 	int i;
-	int inputfile = 0;
+	int inputfile = -1;
 	for (i = 0; i < Pac; i++) {
 		if (strcmp(Pav[i], "<") == 0) {
-			inputfile = i + 1;
+			inputfile = i;
 			break;
 		}
 	}
@@ -184,10 +167,10 @@ int redin(int Pac, char* Pav[]) {
 
 int redout(int Pac, char* Pav[]) {
 	int i;
-	int count = 0;
+	int count = -1;
 	for (i = 0; i < Pac; i++) {
 		if (strcmp(Pav[i], ">") == 0) {
-			count = i + 1;
+			count = i;
 			break;
 		}
 	}

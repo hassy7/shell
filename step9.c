@@ -13,8 +13,6 @@
 void split_cmd(char* cmd, int* ac, char* av[]);
 void split_proc(int* ac, char* av[], int *Pac, char* Pav[], int* count);
 int countPipe(int ac, char* av[]);
-//int countRedi(int Pac, char* Pav[]); 
-//int returnRedi(int Pac, char* Pav[], int rednm);
 int redin(int Pac, char* Pav[]);
 int redout(int Pac, char* Pav[]);
 
@@ -72,29 +70,16 @@ int main(void)
 					perror("fork");
 					exit(-1);
 				} else if (pid == 0) {
-					//子プロセスで別プログラムを実行
-					//redirect
-					//redo = redout(Pac, Pav);
-					//rei = redin(Pac, Pav);
-					/*if (redo > 0) {
-						printf("redout = %i\n", redout(Pac, Pav));
-						Pav[redout(Pac, Pav) - 1] = NULL;
-						fd = open(Pav[redout(Pac, Pav)], O_WRONLY|O_CREAT|O_TRUNC, 0644);
-						close(1);
-						dup(fd);
-						close(fd);
-					}
-					if (rei > 0) {
-					}*/
 					for (i = 0; i < Pac; i++) {
-						if (strcmp(Pav[i], ">")) {
-							Pav[redout(Pac, Pav) - 1] = NULL;
-							fd = open(Pav[redout(Pac, Pav)], O_WRONLY|O_CREAT, 0644);
+						if (strcmp(Pav[i], ">") == 0) {
+							Pav[i] = NULL;
+							fd = open(Pav[i + 1], O_WRONLY|O_CREAT, 0644);
 							close(1);
 							dup(fd);
 							close(fd);
-						} else if (strcmp(Pav[i], "<")) {
-							fd = open(Pav[redout(Pac, Pav)], O_RDONLY|O_CREAT, 0644);
+						} else if (strcmp(Pav[i], "<") == 0) {
+							Pav[i] = NULL;
+							fd = open(Pav[i + 1], O_RDONLY|O_CREAT, 0644);
 							close(0);
 							dup(fd);
 							close(fd);
@@ -165,25 +150,6 @@ int countPipe(int ac, char* av[]) {
 	}
 	return count;
 }
-
-/*int countRedi(int Pac, char* Pav[]) {
-  int i = 0;
-  int count = 0;
-  for (i = 0; i < Pac; i++) {
-  if ((strcmp(Pav[i], "<") == 0) || (strcmp(Pav[i], ">") == 0)) count++;
-  }
-  return count;
-  }
-
-  int returnRedi(int Pac, char* Pav[], int redcount) {
-  int i = 0;
-  int j = 0;
-  for (i = 0; i < redcount + 1; i++){
-  for (; ((strcmp(Pav[j], "<") != 0) || (strcmp(Pav[j], ">") != 0)); j++);
-  }
-  return j;
-
-  }*/
 
 int redin(int Pac, char* Pav[]) {
 	int i;
